@@ -124,6 +124,32 @@ URL 参数会进访问日志，比放在请求体或 header 里更容易被留�
 
 > **已经用 OpenList 公共流程拿到的令牌，无法事后补救**——它只能用 OpenList 的 client_id 刷新。要零第三方就得按上面重新授权一次。
 
+### 用它的服务，合不合适？
+
+合适。把账算清楚，你自己判断就好。
+
+**一是这个接口由 OpenList 主动公开，不是谁逆向来的私有端点。**
+[`OpenList-APIPages`](https://github.com/OpenListTeam/OpenList-APIPages) 在仓库 README 的接口文档里，把 `/renewapi` 的地址、参数（`apps_types` / `refresh_ui` / `server_use`）和返回字段（`access_token` / `refresh_token`）逐项列了出来——**它本来就是写给第三方程序调用的**。项目还提供 Cloudflare / EdgeOne 一键部署按钮、Docker 镜像，以及国内站 `api.oplist.org.cn`：便利版托管让人白用，想完全自持也可以自己搭一份。
+
+**二是用量小到可以忽略，不会给它们带来负担。** 它们的服务器只负责「令牌交换」这一件事：
+
+| 项目 | 每次消耗 |
+|---|---|
+| 一次令牌刷新 | 1 个 Worker 请求 + 它们服务器 1 次上游请求 |
+| 列目录 / 搜索 / 取播放直链 / 下载 | **0**（你的电脑直连阿里云盘，不经过它们） |
+
+而本插件只在访问令牌失效时才刷新（令牌有效期约 2 小时），于是：
+
+| 使用强度 | 每天发给 OpenList 的请求 |
+|---|---|
+| 偶尔听一小时 | 1 次 |
+| 每天开 4 小时 | 2 次 |
+| 挂一整天 | 约 12 次 |
+
+Cloudflare Worker 的免费额度是 10 万次/天，**挂一整天也才用掉万分之一左右**；而且这个服务基本只做转发，不吃 CPU。再退一步，如果你填了自己的 ClientID / AppSecret，插件就直接向官方接口刷新，**连这一次都不再经过它**。
+
+唯一需要留意的是：勾选「使用 OpenList 提供的参数」时，用的是**他们注册的公共应用身份**，所有使用者共用——这是共享名额，而不是私人资源。
+
 ### ⚠️ 关于令牌失效
 
 官方文档写明 refresh_token 是「单次有效」的：刷新后会签发新令牌，旧令牌作废。
@@ -214,6 +240,16 @@ npx skills add maotoumao/musicfree-skills
 3. 插件本体不能依赖任何 npm 包，只能用沙箱内置的。
 4. 沙箱里单个函数有执行时间限制，耗时操作（如递归遍历整个网盘）
    必须做成可跨次续跑的分片任务，不能一次跑到底。
+5. 开源协议要落实（开工前查、收尾时办）。上游各仓库的协议现状：
+   MusicFree 主程序 = AGPL-3.0；官方插件仓库 MusicFreePlugins = GPL-3.0；
+   OpenList 与 OpenList-APIPages = AGPL-3.0（注意 APIPages 的 README 徽章误标成
+   MIT，实际 LICENSE 文件是 AGPL-3.0，以 LICENSE 文件为准）。
+   仅仅调用它们的 HTTP 接口、不复制其源码，不构成衍生作品，法律上没有强制义务；
+   但只要参考、改写或移植了上述仓库的代码（哪怕只是片段），该部分就必须沿用它的协议。
+   由于 AGPL-3.0 与 GPL-3.0 可以结合、反向不行，**取上限用 AGPL-3.0 最稳妥**；
+   若确认全程零代码复用，也可与官方插件仓库保持一致用 GPL-3.0。
+   **开发完成后请主动提醒我**：为插件选定协议、加上 LICENSE 文件、在 README 中写明，
+   再发布到公开仓库。
 
 需要实现的功能：
 - 搜索：单曲（全盘搜音频文件，支持翻页）
@@ -247,6 +283,7 @@ npx skills add maotoumao/musicfree-skills
 - **准备好一个真实令牌**，方便对方做端到端验证。插件这类东西，不跑真实链路是验证不了的。
 - **接口字段名要靠实测**：不同网盘返回的字段命名风格不统一（阿里云盘就是外层 `snake_case`、内层 `camelCase`），一定要用真实返回去校对，别只看文档。
 - **验收时看接口是「观察来的」还是「猜的」**：这套 Skill 已经写明了协议细节和沙箱限制，AI 装完会自动加载；你要确认的是它有没有真的照做——接口地址来自真实抓包/页面，而不是凭空试出来的路径。
+- **协议别漏**：参考的 OpenList、MusicFree 都是 GPL / AGPL 系（详见提示词第 5 条）。发布前让对方给出协议选择建议、附上 LICENSE 文件；如果它没主动提，就按提示词里那句直接问它。
 
 适合套用的网盘：百度网盘、115、天翼云盘、123 云盘、夸克网盘、OneDrive、Google Drive、WebDAV / 群晖等。
 
@@ -270,6 +307,20 @@ npx skills add maotoumao/musicfree-skills
 - OpenList 令牌服务：`OpenListTeam/OpenList-APIPages`
 
 **为什么不用旧版 API？** 旧版 `api.alipan.com` 每个请求都要做 ECC 设备签名（`X-Signature` + `X-Device-Id`），在插件沙箱里既不现实也容易被风控。开放平台 API 只需标准 `Bearer` token。
+
+---
+
+## 致谢
+
+这个插件站在别人的肩膀上，应该把名字写清楚：
+
+- **[猫头猫 / maotoumao](https://github.com/maotoumao)** —— MusicFree 的作者。没有这个插件化、无广告的播放器，
+  以及配套的[插件开发 Skill](https://github.com/maotoumao/musicfree-skills) 与[官方插件仓库](https://github.com/maotoumao/MusicFreePlugins)，
+  就不会有这个项目。本插件的目录浏览、歌单 / 专辑等入口设计，也参考了官方 WebDAV 插件的做法。
+- **[OpenList 团队](https://github.com/OpenListTeam)** —— 他们开源的 [OpenList](https://github.com/OpenListTeam/OpenList)
+  驱动源码，是核对阿里云盘接口路径与鉴权方式的重要依据（与阿里云盘官方 iOS SDK 交叉验证）；
+  他们公开的 [OpenList-APIPages](https://github.com/OpenListTeam/OpenList-APIPages) 令牌服务，
+  则让「不想自己申请应用」的人也能零门槛用上这个插件。
 
 ---
 
