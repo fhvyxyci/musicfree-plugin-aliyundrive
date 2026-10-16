@@ -28,6 +28,7 @@
 - [关于令牌](#关于令牌) —— 有效期、失效、会不会经过第三方、值不值得用
 - [常见问题](#常见问题)
 - [开发其他网盘的类似插件？用这段提示词](#开发其他网盘的类似插件用这段提示词)
+- [做完了怎么分享给别人](#做完了怎么分享给别人)
 - [原理](#原理)
 - [更新日志](#更新日志)
 - [致谢](#致谢)
@@ -93,7 +94,7 @@ https://ghproxy.net/https://raw.githubusercontent.com/fhvyxyci/musicfree-plugin-
 | 1 | **刷新令牌 (refresh_token)** | ✅ | 见下方[获取刷新令牌](#获取刷新令牌) |
 | 2 | **音乐目录** | 选填 | 留空或填 `root` = 从云盘根目录开始；也可填目录路径（如 `/music`）或目录 ID；多个目录用**英文逗号**分隔 |
 | 3 | **云盘类型** | 选填 | `all`（全部云盘，**默认，推荐**）/ `default`（仅默认云盘）/ `resource`（仅资源库）/ `backup`（仅备份盘） |
-| 4 | 客户端ID (ClientID/AppID) | 选填 | 自建应用的 AppId。填了之后令牌**直接向官方接口刷新**，不经过任何第三方 |
+| 4 | 客户端ID (ClientID/AppID) | 选填 | 自建应用的 AppId。填了之后令牌**直接向官方接口刷新**，不经过任何第三方（⚠️ 个人开发者已无法申请，见[下文](#想完全不经第三方自建应用现在对个人基本走不通)） |
 | 5 | 应用密钥 (AppSecret) | 选填 | 与第 4 项配套，**两项都填**才会走官方直连 |
 | 6 | 令牌刷新服务地址 | 选填 | 仅在没填第 4、5 项时生效，默认 `https://api.oplist.org/alicloud/renewapi`，不用改 |
 
@@ -133,11 +134,6 @@ https://ghproxy.net/https://raw.githubusercontent.com/fhvyxyci/musicfree-plugin-
 |---|---|---|
 | `access_token` | **约 2 小时** | 插件**自动续期**，你完全无感 |
 | `refresh_token` | **90 天** | 真的失效了，需要重新获取一个 |
-
-> 90 天这个数字不是猜的：插件登录取回的 `refresh_token` 本身是个 JWT，解开就是
-> `iat`（签发）→ `exp`（到期）相差 **7 776 000 秒 = 正好 90 天**。
-
-**所以「能用一天还没过期」是正常的**——2 小时那个是 `access_token`，早就自动换过好几轮了；你填的那个 90 天的令牌，才刚用完头一天。
 
 ### 刷新会「滚动」签发新令牌
 
@@ -180,9 +176,19 @@ URL 参数会进访问日志，比放在请求体或 header 里更容易被留�
 - 勾选「使用 OpenList 提供的参数」时，用的是**他们的公共应用身份**（源码里的 `c.env.alicloud_uid`），所有用户共用一个 app。
 - **不要**在那页填自己的 ClientID / AppSecret——那两个值同样是通过 URL 参数传给他们服务器的，填了不但没换来安全，反而白送密钥。
 
-### 想完全不经第三方？只能从授权第一步就自建应用
+### 想完全不经第三方？自建应用（现在对个人基本走不通）
 
-refresh_token 与签发它的应用绑定，**事后换通道是无效的**：
+> ⚠️ **阿里云盘开放平台已经关闭了个人申请通道。**
+> 自 **2025 年 7 月 1 日**起，官方暂停受理**个人开发者**的注册申请——登录开发者后台会直接提示
+> 「你还不是阿里云盘开发者，无法登录开发者后台」，目前只受理**企业开发者**（需邮件联系官方对接）。
+>
+> 也就是说，下面这条「自建应用」的路**对个人用户基本已经走不通了**。把它保留在这里，是为了说明原理，
+> 以及给已经持有开发者身份（或背后有企业主体）的人参考。
+>
+> 这也正是本插件默认走 OpenList 公共刷新服务（第 6 项变量）的原因——**不是图省事，而是现在没有别的选择**。
+> 好在按上面的成本核算，这条路既合规、也几乎不占用对方资源。
+
+如果你有条件走这条路，refresh_token 与签发它的应用绑定，**事后换通道是无效的**，只能从第一步就开始：
 
 1. 在**阿里云盘开放平台**申请一个应用，拿到 AppId 与 AppSecret
 2. 用官方接口完成扫码授权：`/oauth/authorize/qrcode` → 扫码 → `/oauth/qrcode/{sid}/status` → `/oauth/access_token`。这四步**可以完全在你本机完成**，不需要任何服务器
@@ -288,6 +294,14 @@ npx skills add maotoumao/musicfree-skills
 这个网盘对应的驱动，读它的源码，摸清真实的接口地址、鉴权方式和参数，
 作为接口依据。
 
+参考资料二：先通读一遍这个已完成的同类插件（阿里云盘版，带 README、
+离线测试脚本和真实环境体检脚本）：
+https://github.com/fhvyxyci/musicfree-plugin-aliyundrive
+看它怎么组织文件、怎么做令牌接力、怎么把「按文件夹的歌单 / 专辑」接进搜索页，
+了解这类插件的最终形态和工程化做法。
+注意：该仓库是 AGPL-3.0，如果你抄了它的代码（哪怕只是片段），
+你的插件也必须用 AGPL-3.0。
+
 硬性要求：
 1. 严格遵循 musicfree-plugin-dev 里的插件协议与「严格行为准则」
    （禁止盲猜 URL、禁止靠网络搜索猜 API、禁止批量探测）。
@@ -334,6 +348,14 @@ npx skills add maotoumao/musicfree-skills
   → 全部歌曲 → 目录 → 搜索 → 播放直链），并校验下载到的文件头是不是真的音频
 - 改完必须跑语法检查 + 离线测试，要求 0 失败
 - 每次改完都 git push 到仓库
+- 开发完成后，主动告诉我怎么把它分享给别人：
+  1) 把项目传到一个**公开的** GitHub 仓库；
+  2) 在仓库 Settings → Pages 里开启 Pages（Source 选「Deploy from a branch」，
+     分支选 main、目录选 / (root)）；
+  3) 给我两个链接——**仓库地址**（别人看源码、提 issue 用的）
+     和 **Pages 地址**（https://<用户名>.github.io/<仓库名>/<插件文件名>.js，
+     别人把它粘进 MusicFree 的「从网络安装」就能直接用）。
+  顺手把 Pages 的启用状态确认一下（构建完成后再给我链接，别给个打不开的）。
 
 插件元信息：
 - platform 填「<网盘名称>」
@@ -353,6 +375,30 @@ npx skills add maotoumao/musicfree-skills
 - **协议别漏**：参考的 OpenList、MusicFree 都是 GPL / AGPL 系（详见提示词第 6 条）。发布前让对方给出协议选择建议、附上 LICENSE 文件；如果它没主动提，就按提示词里那句直接问它。
 
 适合套用的网盘：百度网盘、115、天翼云盘、123 云盘、夸克网盘、OneDrive、Google Drive、WebDAV / 群晖等。
+
+---
+
+## 做完了怎么分享给别人
+
+做好的插件就是**一个 `.js` 文件**，最省事的托管方式是 GitHub：
+
+1. **建一个公开仓库**，把插件文件（如 `aliyundrive.js`）、`README.md`、`LICENSE` 传上去
+2. **开启 Pages**：仓库 **Settings → Pages** → Build and deployment 的 Source 选
+   `Deploy from a branch` → 分支选 `main`、目录选 `/ (root)` → Save
+3. 等一两分钟构建完成，你就有了两个可以发给别人的链接：
+
+| 链接 | 用途 |
+|---|---|
+| `https://github.com/<你>/<仓库名>` | **仓库地址** —— 别人看源码、提 issue、点 Star |
+| `https://<你>.github.io/<仓库名>/<插件文件名>.js` | **导入地址** —— 别人粘进 MusicFree 的「从网络安装」即可使用 |
+
+> 本仓库现在用的是 `raw.githubusercontent.com` 的地址
+> （`https://raw.githubusercontent.com/fhvyxyci/musicfree-plugin-aliyundrive/main/aliyundrive.js`），
+> 效果一样，还不用等 Pages 构建。两种都行：Pages 的链接更短、更像一个「站点」，
+> raw 的链接是社区习惯用法。国内网络直连都未必稳，记得提醒对方可加 `https://ghproxy.net/` 前缀。
+
+**发出去之前检查两件事**：仓库里**不要**有 `.token-cache.json` 这类含令牌的文件；
+README 和代码里**不要**留下自己的 `refresh_token`。
 
 ---
 
