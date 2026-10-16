@@ -399,8 +399,6 @@ https://github.com/fhvyxyci/musicfree-plugin-aliyundrive
 
 ### 做完了怎么分享给别人
 
-> 上面的提示词已经有这里的东西了
-
 做好的插件就是**一个 `.js` 文件**，最省事的托管方式是 GitHub：
 
 1. **建一个公开仓库**，把插件文件（如 `aliyundrive.js`）、`README.md`、`LICENSE` 传上去
