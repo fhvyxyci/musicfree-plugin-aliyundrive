@@ -39,13 +39,13 @@
 在 MusicFree 中：**侧边栏 → 插件管理 → 从网络安装**，粘贴下面的地址：
 
 ```
-https://raw.githubusercontent.com/fhvyxyci/musicfree-alipan/main/aliyundrive.js
+https://raw.githubusercontent.com/fhvyxyci/musicfree-plugin-aliyundrive/main/aliyundrive.js
 ```
 
 如果 `raw.githubusercontent.com` 访问不通（国内网络常见），改用加速代理地址：
 
 ```
-https://ghproxy.net/https://raw.githubusercontent.com/fhvyxyci/musicfree-alipan/main/aliyundrive.js
+https://ghproxy.net/https://raw.githubusercontent.com/fhvyxyci/musicfree-plugin-aliyundrive/main/aliyundrive.js
 ```
 
 （`ghproxy.net` 是第三方公益加速服务，可用性不受本项目控制。若它也不通，请走下面的本地导入。）
