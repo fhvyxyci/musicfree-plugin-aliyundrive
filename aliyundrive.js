@@ -28,6 +28,9 @@
  * 用户信息通过 userVariables 存储：刷新令牌 / 音乐目录 / 云盘类型 /
  * 客户端ID / 客户端密钥 / 令牌刷新服务地址
  *
+ * 刷新令牌会在桌面版通过 musicfree/storage 自动接力保存，
+ * 解决「刷新后旧令牌作废、但插件变量只读写不回去」的问题。
+ *
  * 提供的入口：
  *   - 搜索（单曲 / 专辑 / 歌单）—— 专辑与歌单按「文件夹」呈现，内容一致
  *   - 排行榜（全部歌曲 / 按目录浏览）
@@ -50,6 +53,9 @@ const ALL_SONGS_ID = '__ALL_SONGS__';
 const ALL_FOLDERS_TAG = '__ALL_FOLDERS__';
 // 歌单 / 专辑条目 ID 的前缀（形如 folder:<driveId>:<fileId>）
 const FOLDER_PREFIX = 'folder:';
+
+// 本地持久化存储的键名（musicfree/storage，桌面版可用，移动端没有）
+const STORAGE_KEY = 'aliyundrive.auth';
 
 // 视为音频的扩展名
 const AUDIO_EXT = [
@@ -84,7 +90,7 @@ const DRIVE_FIELD = {
 // 插件实例在应用运行期间常驻，模块级变量可以跨方法调用保存状态
 const cache = {
   signature: '',
-  // 当前生效的刷新令牌（会随刷新滚动更新，仅存在于内存中）
+  // 当前生效的刷新令牌（会随刷新滚动更新；内存里一份，桌面版还会落盘一份）
   refreshToken: '',
   accessToken: '',
   accessTokenExpireAt: 0,
@@ -275,6 +281,83 @@ function syncVars() {
   return vars;
 }
 
+/* ---------------------- 本地持久化（可选能力） ---------------------- */
+
+/**
+ * MusicFree 桌面版沙箱提供 musicfree/storage（异步 getItem / setItem / removeItem），
+ * 移动端尚未注入这个模块，所以这里全程容错：拿不到就当没有，绝不影响主流程。
+ */
+let storageModule;
+let storageProbed = false;
+function getStorage() {
+  if (!storageProbed) {
+    storageProbed = true;
+    try {
+      if (typeof require === 'function') {
+        const m = require('musicfree/storage');
+        if (m && typeof m.getItem === 'function' && typeof m.setItem === 'function') {
+          storageModule = m;
+        }
+      }
+    } catch (e) {
+      storageModule = null;
+    }
+  }
+  return storageModule;
+}
+
+/**
+ * 由「用户在设置里填的那份令牌」算出的指纹（FNV-1a）。
+ * 用来判断磁盘上存下来的令牌是否还属于同一份配置：
+ *   指纹对得上 → 那份是同一份配置轮换出来的，比设置里的原始值更新，优先用；
+ *   指纹对不上 → 用户换过令牌了，磁盘上那份作废，不能覆盖新配置。
+ */
+function tokenFingerprint(token) {
+  if (!token) return '';
+  let h = 0x811c9dc5;
+  for (let i = 0; i < token.length; i++) {
+    h ^= token.charCodeAt(i);
+    h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
+  }
+  return ('00000000' + h.toString(16)).slice(-8) + '-' + token.length;
+}
+
+let authLoaded = false;
+let storedAuth = null;
+
+// 读取上次运行留下的令牌（每次运行只读一次，之后走内存）
+async function loadStoredAuth() {
+  if (authLoaded) return storedAuth;
+  authLoaded = true;
+  const st = getStorage();
+  if (!st) return null;
+  try {
+    const raw = await st.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const obj = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    if (obj && typeof obj.rt === 'string' && obj.rt) {
+      storedAuth = { fp: String(obj.fp == null ? '' : obj.fp), rt: obj.rt };
+    }
+  } catch (e) {
+    storedAuth = null;
+  }
+  return storedAuth;
+}
+
+// 把刷新得到的最新令牌写到磁盘，供下次启动接力
+async function saveStoredAuth(fingerprint, refreshToken) {
+  if (!fingerprint || !refreshToken) return;
+  if (storedAuth && storedAuth.fp === fingerprint && storedAuth.rt === refreshToken) return;
+  storedAuth = { fp: fingerprint, rt: refreshToken };
+  const st = getStorage();
+  if (!st) return;
+  try {
+    await st.setItem(STORAGE_KEY, JSON.stringify(storedAuth));
+  } catch (e) {
+    // 写不进去（磁盘满 / 模块只读）不影响使用，内存里那份仍然有效
+  }
+}
+
 function buildRefreshAttempts(vars, refreshToken) {
   const attempts = [];
   // 方式一：自建应用，直接向上游 OAuth2 接口刷新（令牌不经过任何第三方）
@@ -311,15 +394,25 @@ function buildRefreshAttempts(vars, refreshToken) {
 /**
  * 换取 access_token。
  *
- * 阿里云盘的 refresh_token 刷新后会滚动更新（旧令牌仍可用一段时间，新令牌 90 天有效），
- * 而 MusicFree 的用户变量是只读的，无法把新令牌写回配置，
- * 因此把最新令牌保存在内存中，在同一次运行期间持续接力使用。
+ * 阿里云盘的 access_token 约 2 小时过期，但插件会自动续期，用户无感；
+ * 真正麻烦的是 refresh_token：刷新后服务端会**滚动签发新令牌、旧令牌作废**，
+ * 而 MusicFree 的用户变量是只读的，插件没法把新令牌写回配置。
+ * 于是做两层接力：
+ *   1. 运行期间——最新令牌存在模块级内存里（cache.refreshToken），同一次运行只刷新一次；
+ *   2. 重启之后——最新令牌落到 musicfree/storage（桌面版），下次启动直接用它，
+ *      避免拿着已经被作废的旧令牌去刷新而失败。
  */
 async function fetchAccessToken(useCachedFirst) {
   const vars = syncVars();
+  const fingerprint = tokenFingerprint(vars.refreshToken);
+  const stored = await loadStoredAuth();
+  // 磁盘上那份只有在「指纹对得上」时才可信（即用户没换过令牌）
+  const carried = stored && stored.rt && stored.fp === fingerprint ? stored.rt : '';
 
   const tokens = [];
   if (useCachedFirst && cache.refreshToken) tokens.push(cache.refreshToken);
+  // 上次运行轮换出来的令牌，比设置里那份原始值新
+  if (carried && tokens.indexOf(carried) < 0) tokens.push(carried);
   if (vars.refreshToken && tokens.indexOf(vars.refreshToken) < 0) tokens.push(vars.refreshToken);
   if (!tokens.length) {
     throw new Error('未配置刷新令牌：请先在本插件设置中填写「刷新令牌 (refresh_token)」');
@@ -353,6 +446,8 @@ async function fetchAccessToken(useCachedFirst) {
         // 预留 60 秒安全边界
         cache.accessTokenExpireAt = Date.now() + (expiresIn - 60) * 1000;
         cache.refreshToken = d.refresh_token || tokens[t];
+        // 刷新后旧 refresh_token 会被服务端作废，把新的存下来供下次启动接力
+        await saveStoredAuth(fingerprint, cache.refreshToken);
         return accessToken;
       } catch (e) {
         failures.push(errorText(e));
@@ -1130,7 +1225,7 @@ async function getLyric(musicItem) {
 
 module.exports = {
   platform: '阿里云盘',
-  version: '0.0.7',
+  version: '0.0.8',
   author: 'fhvyxyci',
   description:
     '播放你阿里云盘里的音乐。基于阿里云盘官方开放平台 API，支持搜索、按文件夹浏览歌单/专辑、' +
