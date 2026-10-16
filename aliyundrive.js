@@ -1,5 +1,23 @@
 /**
  * MusicFree 插件 —— 阿里云盘
+ * Copyright (C) 2026 fhvyxyci
+ *
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * ---------------------------------------------------------------------------
  *
  * 数据来源：阿里云盘官方开放平台 API（https://openapi.alipan.com）
  * 接口路径与参数依据：
@@ -1112,7 +1130,7 @@ async function getLyric(musicItem) {
 
 module.exports = {
   platform: '阿里云盘',
-  version: '0.0.6',
+  version: '0.0.7',
   author: 'fhvyxyci',
   description:
     '播放你阿里云盘里的音乐。基于阿里云盘官方开放平台 API，支持搜索、按文件夹浏览歌单/专辑、' +

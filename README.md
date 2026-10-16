@@ -4,7 +4,7 @@
 
 基于**阿里云盘官方开放平台 API**（`openapi.alipan.com`）实现，只需要一个 `refresh_token`，无需抓包、无需设备签名。
 
-- 插件版本：**v0.0.6**
+- 插件版本：**v0.0.7**
 - 作者：fhvyxyci
 - 协议：**AGPL-3.0**（见 [LICENSE](./LICENSE)）
 - 支持平台：MusicFree 桌面版 / 安卓版（插件机制通用）
@@ -344,3 +344,6 @@ npx skills add maotoumao/musicfree-skills
 
 > 如果你基于本项目二次开发，并**通过网络对外提供**这个插件或其修改版，
 > 请注意 AGPL 的网络条款：需要向使用者提供你修改后的完整源码。
+
+源码文件 `aliyundrive.js` 的开头已按 AGPL 附录的建议带上版权声明与
+`SPDX-License-Identifier: AGPL-3.0-or-later` 标识；二次开发时请保留该声明。
