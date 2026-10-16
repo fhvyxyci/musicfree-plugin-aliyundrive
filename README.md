@@ -4,15 +4,15 @@
 
 基于**阿里云盘官方开放平台 API**（`openapi.alipan.com`）实现，只需要一个 `refresh_token`，**无需抓包、无需设备签名**。
 
-| | |
-|---|---|
-| 插件版本 | **v0.0.8** |
-| 作者 | fhvyxyci |
-| 协议 | **AGPL-3.0**（见 [LICENSE](./LICENSE)） |
-| 平台 | MusicFree 桌面版 / 安卓版（插件机制通用） |
-| 依赖 | 无（只用 MusicFree 沙箱内置的 `axios`） |
+|          |                                           |
+| -------- | ----------------------------------------- |
+| 插件版本 | **v0.0.8**                                |
+| 作者     | fhvyxyci                                  |
+| 协议     | **AGPL-3.0**（见 [LICENSE](./LICENSE)）   |
+| 平台     | MusicFree 桌面版 / 安卓版（插件机制通用） |
 
 > 网络导入地址：
+>
 > ```
 > https://raw.githubusercontent.com/fhvyxyci/musicfree-plugin-aliyundrive/main/aliyundrive.js
 > ```
@@ -39,15 +39,15 @@
 
 ## 功能
 
-| 入口 | 说明 |
-|---|---|
-| 搜索 → 单曲 | 全盘搜索音频文件（支持翻页） |
+| 入口        | 说明                                                         |
+| ----------- | ------------------------------------------------------------ |
+| 搜索 → 单曲 | 全盘搜索音频文件（支持翻页）                                 |
 | 搜索 → 歌单 | 把「音乐目录」下的**文件夹**当作歌单列出，点进去就是该文件夹里的歌 |
-| 搜索 → 专辑 | 与「歌单」内容完全一致（同一批文件夹的另一种呈现） |
+| 搜索 → 专辑 | 与「歌单」内容完全一致（同一批文件夹的另一种呈现）           |
 | 推荐 → 歌单 | 多一个「全部文件夹」标签，**不用输关键词**就能浏览所有文件夹 |
-| 排行榜 | 两组：「**全部歌曲（含子目录）**」递归汇总所有音频；「**目录**」按文件夹逐层浏览 |
-| 播放 | 取 4 小时有效的直链播放 |
-| 歌词 | 自动查找歌曲**同目录同名的 `.lrc`** 文件（找不到会提示，属正常） |
+| 排行榜      | 两组：「**全部歌曲（含子目录）**」递归汇总所有音频；「**目录**」按文件夹逐层浏览 |
+| 播放        | 取 4 小时有效的直链播放                                      |
+| 歌词        | 自动查找歌曲**同目录同名的 `.lrc`** 文件（找不到会提示，属正常） |
 
 其他细节：
 
@@ -89,14 +89,14 @@ https://ghproxy.net/https://raw.githubusercontent.com/fhvyxyci/musicfree-plugin-
 
 插件设置里共 6 项，**只有第 1 项是必填的**：
 
-| # | 变量 | 必填 | 填什么 |
-|---|---|---|---|
-| 1 | **刷新令牌 (refresh_token)** | ✅ | 见下方[获取刷新令牌](#获取刷新令牌) |
-| 2 | **音乐目录** | 选填 | 留空或填 `root` = 从云盘根目录开始；也可填目录路径（如 `/music`）或目录 ID；多个目录用**英文逗号**分隔 |
-| 3 | **云盘类型** | 选填 | `all`（全部云盘，**默认，推荐**）/ `default`（仅默认云盘）/ `resource`（仅资源库）/ `backup`（仅备份盘） |
-| 4 | 客户端ID (ClientID/AppID) | 选填 | 自建应用的 AppId。填了之后令牌**直接向官方接口刷新**，不经过任何第三方（⚠️ 个人开发者已无法申请，见[下文](#想完全不经第三方自建应用现在对个人基本走不通)） |
-| 5 | 应用密钥 (AppSecret) | 选填 | 与第 4 项配套，**两项都填**才会走官方直连 |
-| 6 | 令牌刷新服务地址 | 选填 | 仅在没填第 4、5 项时生效，默认 `https://api.oplist.org/alicloud/renewapi`，不用改 |
+| #    | 变量                         | 必填 | 填什么                                                       |
+| ---- | ---------------------------- | ---- | ------------------------------------------------------------ |
+| 1    | **刷新令牌 (refresh_token)** | ✅    | 见下方[获取刷新令牌](#获取刷新令牌)                          |
+| 2    | **音乐目录**                 | 选填 | 留空或填 `root` = 从云盘根目录开始；也可填目录路径（如 `/music`）或目录 ID；多个目录用**英文逗号**分隔 |
+| 3    | **云盘类型**                 | 选填 | `all`（全部云盘，**默认，推荐**）/ `default`（仅默认云盘）/ `resource`（仅资源库）/ `backup`（仅备份盘） |
+| 4    | 客户端ID (ClientID/AppID)    | 选填 | 自建应用的 AppId。填了之后令牌**直接向官方接口刷新**，不经过任何第三方（⚠️ 对于阿里云盘，个人开发者已无法申请，见[下文](#想完全不经第三方自建应用现在对个人基本走不通)） |
+| 5    | 应用密钥 (AppSecret)         | 选填 | 与第 4 项配套，**两项都填**才会走官方直连                    |
+| 6    | 令牌刷新服务地址             | 选填 | 仅在没填第 4、5 项时生效，默认 `https://api.oplist.org/alicloud/renewapi`，不用改 |
 
 ### 最小可用配置
 
@@ -106,8 +106,6 @@ https://ghproxy.net/https://raw.githubusercontent.com/fhvyxyci/musicfree-plugin-
 云盘类型   : all
 （其余留空）
 ```
-
-> **不知道音乐目录在哪？** 把「音乐目录」留空（或填 `root`），先装好插件去**排行榜 → 目录**里看看你的云盘结构，找到音乐文件夹后，再把路径填回去即可。
 
 ---
 
@@ -130,10 +128,10 @@ https://ghproxy.net/https://raw.githubusercontent.com/fhvyxyci/musicfree-plugin-
 
 ### 两种令牌，两种「过期」
 
-| 令牌 | 有效期 | 过期后 |
-|---|---|---|
-| `access_token` | **约 2 小时** | 插件**自动续期**，你完全无感 |
-| `refresh_token` | **90 天** | 真的失效了，需要重新获取一个 |
+| 令牌            | 有效期        | 过期后                       |
+| --------------- | ------------- | ---------------------------- |
+| `access_token`  | **约 2 小时** | 插件**自动续期**，你完全无感 |
+| `refresh_token` | **90 天**     | 真的失效了，需要重新获取一个 |
 
 ### 刷新会「滚动」签发新令牌
 
@@ -141,14 +139,16 @@ https://ghproxy.net/https://raw.githubusercontent.com/fhvyxyci/musicfree-plugin-
 
 而 MusicFree 的插件变量是**只读**的——插件没法把新令牌写回你的配置。本插件用两层接力兜住这件事：
 
-| 时机 | 做法 |
-|---|---|
-| **运行期间** | 新令牌存在内存里，同一次运行只刷新一次，之后长期可用 |
+| 时机         | 做法                                                         |
+| ------------ | ------------------------------------------------------------ |
+| **运行期间** | 新令牌存在内存里，同一次运行只刷新一次，之后长期可用         |
 | **重启之后** | 新令牌写入 MusicFree 的**本地插件存储**（`musicfree/storage`），下次启动优先用它 |
 
 落盘时只保存「**原令牌的指纹**（哈希）+ 最新令牌」，**不重复明文保存你填的那份**。指纹的另一个用处是：你在设置里换了令牌，指纹对不上，插件就会自动忽略旧缓存、改用新填的那份。
 
 > **移动端暂不支持这一步。** MusicFree 移动端沙箱目前没有注入 `musicfree/storage`（见官方 issue #650），所以安卓版只能靠内存接力：单次运行期间一切正常，重启后若旧令牌已被轮换掉，可能提示需要重新获取。桌面版没有这个问题。
+>
+> 移动端最新的测试版还没有开源，不知道支持了没有
 
 如果哪天提示「刷新令牌失败」，说明那个令牌真的失效了（过期，或已在别处被用掉），**重新获取一个填进去即可**。
 
@@ -158,10 +158,10 @@ https://ghproxy.net/https://raw.githubusercontent.com/fhvyxyci/musicfree-plugin-
 
 **两个环节都经过他们的服务器：**
 
-| 环节 | 请求由谁发出 |
-|---|---|
+| 环节                                      | 请求由谁发出                                                 |
+| ----------------------------------------- | ------------------------------------------------------------ |
 | 生成令牌（扫码后「授权码 → 令牌」的交换） | **他们的服务器**（`alyToken` 里由后端 `fetch` 阿里云盘接口完成） |
-| 之后**每次刷新** | 同样是**他们的服务器**（`genToken` 读取 URL 参数后代发上游请求） |
+| 之后**每次刷新**                          | 同样是**他们的服务器**（`genToken` 读取 URL 参数后代发上游请求） |
 
 而且刷新时 **refresh_token 是放在 URL 查询串里的**：
 
@@ -186,7 +186,9 @@ URL 参数会进访问日志，比放在请求体或 header 里更容易被留�
 > 以及给已经持有开发者身份（或背后有企业主体）的人参考。
 >
 > 这也正是本插件默认走 OpenList 公共刷新服务（第 6 项变量）的原因——**不是图省事，而是现在没有别的选择**。
-> 好在按上面的成本核算，这条路既合规、也几乎不占用对方资源。
+> 好在按下面的成本核算，这条路既合规、也几乎不占用对方资源。
+
+> 下面这个方法是AI自己写的，我也没办法测试，看个乐就好
 
 如果你有条件走这条路，refresh_token 与签发它的应用绑定，**事后换通道是无效的**，只能从第一步就开始：
 
@@ -198,6 +200,8 @@ URL 参数会进访问日志，比放在请求体或 header 里更容易被留�
 
 ### 用它的服务，合不合适？
 
+> 白嫖人家的东西，让AI分析了一波，感觉还可以，问题不大
+
 合适。把账算清楚，你自己判断就好。
 
 **一是这个接口由 OpenList 主动公开，不是谁逆向来的私有端点。**
@@ -205,20 +209,20 @@ URL 参数会进访问日志，比放在请求体或 header 里更容易被留�
 
 **二是用量小到可以忽略，不会给它们带来负担。** 它们的服务器只负责「令牌交换」这一件事：
 
-| 项目 | 每次消耗 |
-|---|---|
-| 一次令牌刷新 | 1 个 Worker 请求 + 它们服务器 1 次上游请求 |
-| 列目录 / 搜索 / 取播放直链 / 下载 | **0**（你的电脑直连阿里云盘，不经过它们） |
+| 项目                              | 每次消耗                                   |
+| --------------------------------- | ------------------------------------------ |
+| 一次令牌刷新                      | 1 个 Worker 请求 + 它们服务器 1 次上游请求 |
+| 列目录 / 搜索 / 取播放直链 / 下载 | **0**（你的电脑直连阿里云盘，不经过它们）  |
 
 而本插件只在访问令牌失效时才刷新（`access_token` 有效期约 2 小时），于是：
 
-| 使用强度 | 每天发给 OpenList 的请求 |
-|---|---|
-| 偶尔听一小时 | 1 次 |
-| 每天开 4 小时 | 2 次 |
-| 挂一整天 | 约 12 次 |
+| 使用强度      | 每天发给 OpenList 的请求 |
+| ------------- | ------------------------ |
+| 偶尔听一小时  | 1 次                     |
+| 每天开 4 小时 | 2 次                     |
+| 挂一整天      | 约 12 次                 |
 
-Cloudflare Worker 的免费额度是 10 万次/天，**挂一整天也才用掉万分之一左右**；而且这个服务基本只做转发，不吃 CPU。再退一步，如果你填了自己的 ClientID / AppSecret，插件就直接向官方接口刷新，**连这一次都不再经过它**。
+Cloudflare Worker 的免费额度是 10 万次/天，**挂一整天也才用掉万分之一左右**；而且这个服务基本只做转发，不吃 CPU。
 
 唯一需要留意的是：勾选「使用 OpenList 提供的参数」时，用的是**他们注册的公共应用身份**，所有使用者共用——这是共享名额，而不是私人资源。
 
@@ -265,9 +269,9 @@ npx skills add maotoumao/musicfree-skills
 
 装上后自动生效，AI 检测到相关任务时会主动调用。它包含两个 Skill：
 
-| Skill | 用途 |
-|---|---|
-| `musicfree-plugin-dev` | **插件开发**：插件协议与 14 种方法签名、沙箱内置模块（axios / cheerio / crypto-js / dayjs）、站点分析方法论、媒体类型定义、自动化测试与迭代修复 |
+| Skill                     | 用途                                                         |
+| ------------------------- | ------------------------------------------------------------ |
+| `musicfree-plugin-dev`    | **插件开发**：插件协议与 14 种方法签名、沙箱内置模块（axios / cheerio / crypto-js / dayjs）、站点分析方法论、媒体类型定义、自动化测试与迭代修复 |
 | `musicfree-themepack-dev` | **主题包开发**：CSS 变量体系、色彩设计范式、动态 iframe 主题、资源优化与打包、主题市场提交流程 |
 
 其中 `musicfree-plugin-dev` 开头的「**严格行为准则**」值得单独留意，它明确禁止 AI：
@@ -282,6 +286,10 @@ npx skills add maotoumao/musicfree-skills
 ### 第二步：复制下面这段提示词
 
 装好 Skill 后，在 WorkBuddy / Claude 等支持文件读写和联网的 AI 助手里粘贴：
+
+> 请注意务必使用Agent，不要用网页做，肯定是做不出来的，不想花钱可以用腾讯的WorkBuddy，起码现在是能白嫖的，这个项目就是白嫖做出来
+
+> 这段提示词中含有一些提醒开源协议及github仓库设置的内容（硬性要求6，工程要求后两个），如果你不打算把你的插件分享出来，可以提前删掉以免占用资源，但分享出来也不麻烦，准备一个github账号，让Agent帮你做就可以了。
 
 ````text
 帮我为 MusicFree 开发一个「<网盘名称>」插件，用插件变量（userVariables）存储用户信息。
@@ -347,9 +355,10 @@ https://github.com/fhvyxyci/musicfree-plugin-aliyundrive
 - 再写一个真实环境体检脚本，我提供令牌后跑通完整链路（刷新令牌 → 排行榜
   → 全部歌曲 → 目录 → 搜索 → 播放直链），并校验下载到的文件头是不是真的音频
 - 改完必须跑语法检查 + 离线测试，要求 0 失败
-- 每次改完都 git push 到仓库
+- 每次改完都 git commit 到仓库，仓库中只包含主js文件和Readme, 如果有开源协议就再加一个许可证文件
+- git仓库中不能含有我的刷新令牌或任何私人信息
 - 开发完成后，主动告诉我怎么把它分享给别人：
-  1) 把项目传到一个**公开的** GitHub 仓库；
+  1) 把项目传到一个 **公开的** GitHub 仓库；
   2) 在仓库 Settings → Pages 里开启 Pages（Source 选「Deploy from a branch」，
      分支选 main、目录选 / (root)）；
   3) 给我两个链接——**仓库地址**（别人看源码、提 issue 用的）
@@ -376,26 +385,25 @@ https://github.com/fhvyxyci/musicfree-plugin-aliyundrive
 
 适合套用的网盘：百度网盘、115、天翼云盘、123 云盘、夸克网盘、OneDrive、Google Drive、WebDAV / 群晖等。
 
+> 理论上openlist那边支持的网盘，应该都能同样的方法做出来
+
 ---
 
-## 做完了怎么分享给别人
+### 做完了怎么分享给别人
 
-做好的插件就是**一个 `.js` 文件**，最省事的托管方式是 GitHub：
+> 上面的提示词已经有这里的东西了
+
+做好的插件就是**一个 `.js` 文件**，最省事的托管方式是 GitHub（如果不方便访问可以用国内的Gitee代替）：
 
 1. **建一个公开仓库**，把插件文件（如 `aliyundrive.js`）、`README.md`、`LICENSE` 传上去
 2. **开启 Pages**：仓库 **Settings → Pages** → Build and deployment 的 Source 选
    `Deploy from a branch` → 分支选 `main`、目录选 `/ (root)` → Save
 3. 等一两分钟构建完成，你就有了两个可以发给别人的链接：
 
-| 链接 | 用途 |
-|---|---|
-| `https://github.com/<你>/<仓库名>` | **仓库地址** —— 别人看源码、提 issue、点 Star |
+| 链接                                              | 用途                                                        |
+| ------------------------------------------------- | ----------------------------------------------------------- |
+| `https://github.com/<你>/<仓库名>`                | **仓库地址** —— 别人看源码、提 issue、点 Star               |
 | `https://<你>.github.io/<仓库名>/<插件文件名>.js` | **导入地址** —— 别人粘进 MusicFree 的「从网络安装」即可使用 |
-
-> 本仓库现在用的是 `raw.githubusercontent.com` 的地址
-> （`https://raw.githubusercontent.com/fhvyxyci/musicfree-plugin-aliyundrive/main/aliyundrive.js`），
-> 效果一样，还不用等 Pages 构建。两种都行：Pages 的链接更短、更像一个「站点」，
-> raw 的链接是社区习惯用法。国内网络直连都未必稳，记得提醒对方可加 `https://ghproxy.net/` 前缀。
 
 **发出去之前检查两件事**：仓库里**不要**有 `.token-cache.json` 这类含令牌的文件；
 README 和代码里**不要**留下自己的 `refresh_token`。
@@ -404,14 +412,14 @@ README 和代码里**不要**留下自己的 `refresh_token`。
 
 ## 原理
 
-| 用途 | 端点 |
-|---|---|
-| 刷新令牌 | `POST /oauth/access_token` |
-| 云盘信息 | `POST /adrive/v1.0/user/getDriveInfo` |
-| 目录列表 | `POST /adrive/v1.0/openFile/list` |
-| 文件搜索 | `POST /adrive/v1.0/openFile/search` |
-| 播放直链 | `POST /adrive/v1.0/openFile/getDownloadUrl` |
-| 路径查目录 | `POST /adrive/v1.0/openFile/get_by_path` |
+| 用途       | 端点                                        |
+| ---------- | ------------------------------------------- |
+| 刷新令牌   | `POST /oauth/access_token`                  |
+| 云盘信息   | `POST /adrive/v1.0/user/getDriveInfo`       |
+| 目录列表   | `POST /adrive/v1.0/openFile/list`           |
+| 文件搜索   | `POST /adrive/v1.0/openFile/search`         |
+| 播放直链   | `POST /adrive/v1.0/openFile/getDownloadUrl` |
+| 路径查目录 | `POST /adrive/v1.0/openFile/get_by_path`    |
 
 接口路径与参数经以下来源**双重交叉验证**：
 
@@ -457,13 +465,8 @@ README 和代码里**不要**留下自己的 `refresh_token`。
 
 这个插件站在别人的肩膀上，应该把名字写清楚：
 
-- **[猫头猫 / maotoumao](https://github.com/maotoumao)** —— MusicFree 的作者。没有这个插件化、无广告的播放器，
-  以及配套的[插件开发 Skill](https://github.com/maotoumao/musicfree-skills) 与[官方插件仓库](https://github.com/maotoumao/MusicFreePlugins)，
-  就不会有这个项目。本插件的目录浏览、歌单 / 专辑等入口设计，也参考了官方 WebDAV 插件的做法。
-- **[OpenList 团队](https://github.com/OpenListTeam)** —— 他们开源的 [OpenList](https://github.com/OpenListTeam/OpenList)
-  驱动源码，是核对阿里云盘接口路径与鉴权方式的重要依据（与阿里云盘官方 iOS SDK 交叉验证）；
-  他们公开的 [OpenList-APIPages](https://github.com/OpenListTeam/OpenList-APIPages) 令牌服务，
-  则让「不想自己申请应用」的人也能零门槛用上这个插件。
+- **[猫头猫 / maotoumao](https://github.com/maotoumao)** —— MusicFree 的作者。没有这个插件化、无广告的播放器，以及配套的[插件开发 Skill](https://github.com/maotoumao/musicfree-skills) 与[官方插件仓库](https://github.com/maotoumao/MusicFreePlugins)，就不会有这个项目。本插件的目录浏览、歌单 / 专辑等入口设计，也参考了官方 WebDAV 插件的做法。
+- **[OpenList 团队](https://github.com/OpenListTeam)** —— 他们开源的 [OpenList](https://github.com/OpenListTeam/OpenList)驱动源码，是核对阿里云盘接口路径与鉴权方式的重要依据（与阿里云盘官方 iOS SDK 交叉验证）；他们公开的 [OpenList-APIPages](https://github.com/OpenListTeam/OpenList-APIPages) 令牌服务，则让「不想自己申请应用」的人也能零门槛用上这个插件。
 
 ---
 
@@ -480,13 +483,10 @@ README 和代码里**不要**留下自己的 `refresh_token`。
 
 **AGPL-3.0** —— 完整文本见 [LICENSE](./LICENSE)。
 
-为什么选它：本插件参考的上游项目都属于 GPL / AGPL 系——MusicFree 主程序是 `AGPL-3.0`，
-官方插件仓库 `MusicFreePlugins` 是 `GPL-3.0`，OpenList 与 OpenList-APIPages 都是 `AGPL-3.0`。
-虽然仅通过 HTTP 接口调用它们并不构成衍生作品，但既然开发过程中确实参考过上游的实现，
-就按**协议上限**来，不留含糊（AGPL-3.0 与 GPL-3.0 可以结合，反过来则不行）。
+为什么选它：本插件参考的上游项目都属于 GPL / AGPL 系——MusicFree 主程序是 `AGPL-3.0`，官方插件仓库 `MusicFreePlugins` 是 `GPL-3.0`，OpenList 与 OpenList-APIPages 都是 `AGPL-3.0`。虽然仅通过 HTTP 接口调用它们并不构成衍生作品，但既然开发过程中确实参考过上游的实现，就按**协议上限**来，不留含糊（AGPL-3.0 与 GPL-3.0 可以结合，反过来则不行）。
 
 > 如果你基于本项目二次开发，并**通过网络对外提供**这个插件或其修改版，
 > 请注意 AGPL 的网络条款：需要向使用者提供你修改后的完整源码。
 
 源码文件 `aliyundrive.js` 的开头已按 AGPL 附录的建议带上版权声明与
-`SPDX-License-Identifier: AGPL-3.0-or-later` 标识；二次开发时请保留该声明。
+`SPDX-License-Identifier: AGPL-3.0-or-later` 标识；二次开发时请同样带上该声明。
