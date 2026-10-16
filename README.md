@@ -6,6 +6,7 @@
 
 - 插件版本：**v0.0.6**
 - 作者：fhvyxyci
+- 协议：**AGPL-3.0**（见 [LICENSE](./LICENSE)）
 - 支持平台：MusicFree 桌面版 / 安卓版（插件机制通用）
 
 ---
@@ -334,4 +335,12 @@ npx skills add maotoumao/musicfree-skills
 
 ## 协议
 
-MIT
+**AGPL-3.0** —— 完整文本见 [LICENSE](./LICENSE)。
+
+为什么选它：本插件参考的上游项目都属于 GPL / AGPL 系——MusicFree 主程序是 `AGPL-3.0`，
+官方插件仓库 `MusicFreePlugins` 是 `GPL-3.0`，OpenList 与 OpenList-APIPages 都是 `AGPL-3.0`。
+虽然仅通过 HTTP 接口调用它们并不构成衍生作品，但既然开发过程中确实参考过上游的实现，
+就按**协议上限**来，不留含糊（AGPL-3.0 与 GPL-3.0 可以结合，反过来则不行）。
+
+> 如果你基于本项目二次开发，并**通过网络对外提供**这个插件或其修改版，
+> 请注意 AGPL 的网络条款：需要向使用者提供你修改后的完整源码。
