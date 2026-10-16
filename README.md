@@ -128,17 +128,53 @@ https://ghproxy.net/https://raw.githubusercontent.com/fhvyxyci/musicfree-alipan/
 
 ## 开发其他网盘的类似插件？用这段提示词
 
-本插件就是从下面这段需求迭代出来的，**换个网盘名就能复用**。直接在 WorkBuddy / Claude 等支持文件读写和联网的 AI 助手里粘贴：
+本插件就是从下面这段需求迭代出来的，**换个网盘名就能复用**。
+
+### 第一步：先装官方 Skill
+
+MusicFree 作者维护了一套官方 AI Skill 合集，本插件的开发全程照它执行：
+
+**<https://github.com/maotoumao/musicfree-skills>**
+
+```bash
+npx skills add maotoumao/musicfree-skills
+```
+
+装上后自动生效，AI 检测到相关任务时会主动调用。它包含两个 Skill：
+
+| Skill | 用途 |
+|---|---|
+| `musicfree-plugin-dev` | **插件开发**：插件协议与 14 种方法签名、沙箱内置模块（axios / cheerio / crypto-js / dayjs）、站点分析方法论、媒体类型定义、自动化测试与迭代修复 |
+| `musicfree-themepack-dev` | **主题包开发**：CSS 变量体系、色彩设计范式、动态 iframe 主题、资源优化与打包、主题市场提交流程 |
+
+其中 `musicfree-plugin-dev` 开头的「**严格行为准则**」值得单独留意，它明确禁止 AI：
+
+- **盲猜 URL**——不试 `/api/search` 这类路径，每个地址必须来自页面内容或真实抓包
+- **搜索「XX音乐 API」**——数据来源必须来自对目标站点的直接观察，不能来自网络搜索
+- **批量探测参数组合**、**重复请求同一地址**
+- **一句「需要浏览器环境」就放弃**
+
+本插件里那套「先写临时探测脚本验证接口行为、确认后再落进插件、用完删掉」的流程，就是照这些准则做的——接口字段一律以**真实返回**为准，不看文档猜。
+
+### 第二步：复制下面这段提示词
+
+装好 Skill 后，在 WorkBuddy / Claude 等支持文件读写和联网的 AI 助手里粘贴：
 
 ````text
 帮我为 MusicFree 开发一个「<网盘名称>」插件，用插件变量（userVariables）存储用户信息。
+
+开工前先安装并加载官方 Skill：npx skills add maotoumao/musicfree-skills
+（https://github.com/maotoumao/musicfree-skills），
+严格按其中 musicfree-plugin-dev 的插件协议与行为准则执行。
 
 参考资料：先去 https://github.com/OpenListTeam/OpenList 的 drivers 目录下找到
 这个网盘对应的驱动，读它的源码，摸清真实的接口地址、鉴权方式和参数，
 作为接口依据。
 
 硬性要求：
-1. 先加载 musicfree-plugin-dev 技能，严格按 MusicFree 插件协议写。
+1. 严格遵循 musicfree-plugin-dev 里的插件协议与「严格行为准则」
+   （禁止盲猜 URL、禁止靠网络搜索猜 API、禁止批量探测）。
+   所有接口行为都要先用临时脚本对真实接口验证过，再写进插件。
 2. 优先使用该网盘的「官方开放平台 API」（只需要 Bearer token 的那种）。
    如果某个接口必须做私有签名（如设备指纹、ECC 签名），先评估
    MusicFree 沙箱能不能做（沙箱只有 axios / crypto-js / big-integer），
@@ -178,7 +214,7 @@ https://ghproxy.net/https://raw.githubusercontent.com/fhvyxyci/musicfree-alipan/
 - **第一轮先要方案，别直接要代码**——最后那句「先告诉我你打算用哪些接口」很关键，能提前发现鉴权死路（很多网盘的私有 API 需要复杂签名，沙箱做不了）。
 - **准备好一个真实令牌**，方便对方做端到端验证。插件这类东西，不跑真实链路是验证不了的。
 - **接口字段名要靠实测**：不同网盘返回的字段命名风格不统一（阿里云盘就是外层 `snake_case`、内层 `camelCase`），一定要用真实返回去校对，别只看文档。
-- **要求对方先写临时探测脚本**验证接口行为，确认后再写进插件，用完删掉——直接猜接口很容易白写。
+- **验收时看接口是「观察来的」还是「猜的」**：这套 Skill 已经写明了协议细节和沙箱限制，AI 装完会自动加载；你要确认的是它有没有真的照做——接口地址来自真实抓包/页面，而不是凭空试出来的路径。
 
 适合套用的网盘：百度网盘、115、天翼云盘、123 云盘、夸克网盘、OneDrive、Google Drive、WebDAV / 群晖等。
 
