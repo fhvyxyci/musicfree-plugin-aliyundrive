@@ -14,8 +14,10 @@
 > 网络导入地址：
 >
 > ```
-> https://raw.githubusercontent.com/fhvyxyci/musicfree-plugin-aliyundrive/main/aliyundrive.js
+> https://fhvyxyci.github.io/musicfree-plugin-aliyundrive/aliyundrive.js
 > ```
+>
+> （打不开的话见[安装](#安装)里的备用地址）
 
 ---
 
@@ -66,16 +68,19 @@
 在 MusicFree 中：**侧边栏 → 插件管理 → 从网络安装**，粘贴下面的地址：
 
 ```
-https://raw.githubusercontent.com/fhvyxyci/musicfree-plugin-aliyundrive/main/aliyundrive.js
+https://fhvyxyci.github.io/musicfree-plugin-aliyundrive/aliyundrive.js
 ```
 
-如果 `raw.githubusercontent.com` 访问不通（国内网络常见），改用加速代理地址：
+这个地址走 **GitHub Pages**，通常比 `raw.githubusercontent.com` 更容易在国内直连成功——后者常年被 DNS 污染，是大家最常遇到打不开的那个。但要注意：两者其实**跑在同一段 GitHub 线路上**（都是 Fastly 的 `185.199.108.0/24`，只是域名不同），所以**谁都不能保证一定通**。打不开就按顺序换：
 
-```
-https://ghproxy.net/https://raw.githubusercontent.com/fhvyxyci/musicfree-plugin-aliyundrive/main/aliyundrive.js
-```
+| 备用地址 | 说明 |
+|---|---|
+| `https://raw.githubusercontent.com/fhvyxyci/musicfree-plugin-aliyundrive/main/aliyundrive.js` | GitHub 原始地址，部分网络反而更快 |
+| `https://ghproxy.net/https://fhvyxyci.github.io/musicfree-plugin-aliyundrive/aliyundrive.js` | 加一个公益加速前缀 |
 
-（`ghproxy.net` 是第三方公益加速服务，可用性不受本项目控制。若它也不通，请走下面的本地导入。）
+（`ghproxy.net` 是第三方公益加速服务，可用性不受本项目控制。都不行就走下面的本地导入。）
+
+> GitHub Pages 每次推送后要构建一两分钟，刚更新完可能还拿到旧版本；`raw` 与 Pages 的缓存时间也略有差别。两个地址取到的文件内容是完全一样的。
 
 ### 方式二：本地导入
 
@@ -393,7 +398,7 @@ https://github.com/fhvyxyci/musicfree-plugin-aliyundrive
 
 > 上面的提示词已经有这里的东西了
 
-做好的插件就是**一个 `.js` 文件**，最省事的托管方式是 GitHub（如果不方便访问可以用国内的Gitee代替）：
+做好的插件就是**一个 `.js` 文件**，最省事的托管方式是 GitHub：
 
 1. **建一个公开仓库**，把插件文件（如 `aliyundrive.js`）、`README.md`、`LICENSE` 传上去
 2. **开启 Pages**：仓库 **Settings → Pages** → Build and deployment 的 Source 选
@@ -404,6 +409,11 @@ https://github.com/fhvyxyci/musicfree-plugin-aliyundrive
 | ------------------------------------------------- | ----------------------------------------------------------- |
 | `https://github.com/<你>/<仓库名>`                | **仓库地址** —— 别人看源码、提 issue、点 Star               |
 | `https://<你>.github.io/<仓库名>/<插件文件名>.js` | **导入地址** —— 别人粘进 MusicFree 的「从网络安装」即可使用 |
+
+> **想用 Gitee 代替？** 只剩 raw 直链这一条路：
+> `https://gitee.com/<你>/<仓库名>/raw/main/<插件文件名>.js`。
+> **Gitee Pages 已经下线了**（官方在 issue 里明确回复「该功能已下线」），别指望它；
+> 而且 Gitee 对公开仓库有审核要求、账号需要实名。
 
 **发出去之前检查两件事**：仓库里**不要**有 `.token-cache.json` 这类含令牌的文件；
 README 和代码里**不要**留下自己的 `refresh_token`。
