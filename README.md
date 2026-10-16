@@ -92,6 +92,38 @@ https://ghproxy.net/https://raw.githubusercontent.com/fhvyxyci/musicfree-alipan/
 4. 点「获取 Token」→ **用阿里云盘 App 扫码登录**
 5. 复制返回的 **Refresh Token**，粘贴到插件设置的第 1 项
 
+### ⚠️ 这个令牌会经过第三方服务器
+
+上面那个网站（`api.oplist.org`）是开源项目 [OpenListTeam/OpenList-APIPages](https://github.com/OpenListTeam/OpenList-APIPages)，部署在 Cloudflare Worker 上。我读过它的源码，把链路说清楚，你可以自己核对：
+
+**两个环节都经过他们的服务器：**
+
+| 环节 | 请求由谁发出 |
+|---|---|
+| 生成令牌（扫码后「授权码 → 令牌」的交换） | **他们的服务器**（`alyToken` 里由后端 `fetch` 阿里云盘接口完成） |
+| 之后**每次刷新** | 同样是**他们的服务器**（`genToken` 读取 URL 参数后代发上游请求） |
+
+而且刷新时 **refresh_token 是放在 URL 查询串里的**：
+
+```
+https://api.oplist.org/alicloud/renewapi?refresh_ui=<你的刷新令牌>
+```
+
+URL 参数会进访问日志，比放在请求体或 header 里更容易被留存。而这串东西是 90 天有效的长期凭证，**等同于你云盘的读写权限**。
+
+还有两点要注意：
+
+- 勾选「使用 OpenList 提供的参数」时，用的是**他们的公共应用身份**（源码里的 `c.env.alicloud_uid`），所有用户共用一个 app。
+- **不要**在那页填自己的 ClientID / AppSecret——那两个值同样是通过 URL 参数传给他们服务器的，填了不但没换来安全，反而白送密钥。
+
+**想完全不经第三方，只能从授权第一步就用自建应用**（因为 refresh_token 与签发它的应用绑定，事后换通道是无效的）：
+
+1. 在**阿里云盘开放平台**申请一个应用，拿到 AppId 与 AppSecret
+2. 用官方接口完成扫码授权：`/oauth/authorize/qrcode` → 扫码 → `/oauth/qrcode/{sid}/status` → `/oauth/access_token`。这四步**可以完全在你本机完成**，不需要任何服务器
+3. 把得到的 refresh_token 填进第 1 项，AppId / AppSecret 填进第 4、5 项——插件的**第一优先通道**就是官方直连，此后刷新不再经过任何人
+
+> **已经用 OpenList 公共流程拿到的令牌，无法事后补救**——它只能用 OpenList 的 client_id 刷新。要零第三方就得按上面重新授权一次。
+
 ### ⚠️ 关于令牌失效
 
 官方文档写明 refresh_token 是「单次有效」的：刷新后会签发新令牌，旧令牌作废。
@@ -243,7 +275,11 @@ npx skills add maotoumao/musicfree-skills
 
 ## 免责声明
 
-本插件通过阿里云盘官方开放平台接口读取**你自己账号**的内容，不存储、不上传任何数据。请自行保管好 `refresh_token`——它等同于你云盘的访问凭证，**不要提交到公开仓库或分享给他人**。
+本插件通过阿里云盘官方开放平台接口读取**你自己账号**的内容，不存储、不上传任何数据。
+
+请自行保管好 `refresh_token`——它等同于你云盘的访问凭证，**不要提交到公开仓库或分享给他人**。
+
+另外请注意：如果你按「如何获取刷新令牌」用 `api.oplist.org` 生成的令牌，**该令牌的产生与后续每次刷新都会经过该第三方服务器**（详见上文「这个令牌会经过第三方服务器」一节）。追求完全私有链路请走自建应用 + 官方直连。
 
 ## 协议
 
